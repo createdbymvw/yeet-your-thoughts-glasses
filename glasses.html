@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- Meta Ray-Ban Display Web App requirements (see docs/meta-glasses.md) -->
+  <meta name="description" content="yeet your thoughts — write it. burn it. let it go.">
+  <meta name="mrbd-web-app-capable" content="yes">
+  <meta name="viewport" content="width=600, height=600, initial-scale=1.0, user-scalable=no">
+  <meta name="color-scheme" content="dark">
+  <meta name="referrer" content="no-referrer">
+  <title>yeet your thoughts</title>
+  <!-- PNG icon: the glasses runtime does not support SVG icons -->
+  <link rel="icon" type="image/png" sizes="128x128" href="./assets/icon-128.png">
+  <link rel="apple-touch-icon" href="./assets/icon-128.png">
+  <!-- Optional web fonts; the CSS falls back to system serif/sans. -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles/main.css">
+  <link rel="stylesheet" href="./styles/glasses.css">
+</head>
+<body data-mode="glasses" data-state="idle" data-platform="meta-webapp">
+
+  <div class="viewport" id="viewport">
+    <div class="app" id="app">
+
+      <header class="masthead">
+        <h1 class="title">yeet your thoughts</h1>
+      </header>
+
+      <main class="stage" id="stage">
+        <canvas class="embers" id="embers" aria-hidden="true"></canvas>
+
+        <div class="paper-wrap" id="paper-wrap">
+          <!-- On the glasses the text field itself is the focusable target:
+               pinching a focused textarea opens the native composer. -->
+          <div class="paper" id="paper">
+            <label class="sr-only" for="thought">your thought</label>
+            <textarea id="thought" class="thought focusable" rows="1" maxlength="140"
+              data-target="paper"
+              placeholder="pinch to write or speak"
+              autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+              aria-label="your thought"></textarea>
+          </div>
+          <canvas class="burn" id="burn" aria-hidden="true"></canvas>
+        </div>
+
+        <p class="afterglow" id="afterglow" aria-live="polite"></p>
+      </main>
+
+      <footer class="controls">
+        <div class="chips" id="chips" role="group" aria-label="quick thoughts">
+          <button class="chip focusable" type="button" data-target="chip" data-preset="looping">looping</button>
+          <button class="chip focusable" type="button" data-target="chip" data-preset="too much">too much</button>
+          <button class="chip focusable" type="button" data-target="chip" data-preset="not mine">not mine</button>
+          <button class="chip focusable" type="button" data-target="chip" data-preset="for later">for later</button>
+        </div>
+        <div class="actions">
+          <button class="burn-btn focusable" id="burn-btn" type="button" data-target="burn" disabled>Burn This</button>
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <script type="module" src="./src/main-glasses.js"></script>
+</body>
+</html>

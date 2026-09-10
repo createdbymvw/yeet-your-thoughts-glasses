@@ -5,10 +5,14 @@ No bundler, no framework, no backend. The code is split so that the browser
 prototype and a future glasses build share everything except the input layer.
 
 ```
-index.html                 markup: one paper, four chips, one action
+index.html                 browser prototype: one paper, four chips, one action
+glasses.html               Meta Ray-Ban Display Web App build (600 × 600, required meta tags)
 styles/main.css            editorial styling, glasses preview, reduced motion
+styles/glasses.css         device overrides: pure black, larger type and focus targets
+assets/icon-128.png        PNG icon (the glasses runtime does not accept SVG icons)
 src/
-  main.js                  entry point (creates the app, nothing on window)
+  main.js                  browser entry point (creates the app, nothing on window)
+  main-glasses.js          device entry point: createApp(document, { platform: 'meta-webapp' })
   app.js                   wires modules together and runs the ritual sequence
   config.js                timings, limits, particle budgets, display size
   core/
@@ -20,7 +24,7 @@ src/
   adapters/
     InteractionAdapter.js  base class + the intent vocabulary
     WebInteractionAdapter.js   mouse / touch / keyboard → intents
-    MetaInteractionAdapter.js  placeholder for glasses gestures (see docs/meta-glasses.md)
+    MetaInteractionAdapter.js  glasses gestures as documented by Meta (see docs/meta-glasses.md)
     GlassesAdapter.js      display mode: browser vs 600×600 glasses preview
   animation/
     BurnAnimation.js       orchestrates the burn, embers and afterglow; owns the loop
@@ -66,7 +70,10 @@ Targets are DOM elements marked `[data-target="paper|chip|mic|burn"]`.
 `InputController` is the only consumer. It never sees a mouse event or a gesture.
 
 Swapping `WebInteractionAdapter` for `MetaInteractionAdapter` is the whole
-device port on the input side; the rest of the app is untouched.
+device port on the input side; the rest of the app is untouched. Meta's runtime
+delivers gestures as `keydown` events (`ArrowUp/Down/Left/Right`, `Enter`,
+`Escape`), and the on-glasses text composer commits through `input`/`change`,
+so the Meta adapter is small and uses no proprietary API.
 
 ## The burn
 
@@ -95,6 +102,16 @@ ritual always completes even if frames stop (hidden tab, throttled device).
 rendered at the display's native 600 × 600 px and scaled to fit the window
 with a CSS transform, so recordings match the target pixel grid. The chrome
 (mode toggle, privacy note) lives outside `.app` and never appears on device.
+
+## Two entry pages, one app
+
+Meta documents no way to detect the glasses runtime from a page, so the
+project ships `index.html` (responsive browser prototype with a preview mode)
+and `glasses.html` (fixed 600 × 600 device build). Both call `createApp`; the
+`platform` option picks the adapter, hides the mic, and disables the preview
+frame. On the device build the `<textarea>` carries `data-target="paper"`
+directly, because the composer opens only when the wearer pinches a field
+that already has focus.
 
 ## Privacy by construction
 

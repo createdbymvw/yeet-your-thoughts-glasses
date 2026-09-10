@@ -18,7 +18,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
  *
  * Nothing in here touches raw device events; that is the adapters' job.
  */
-export function createApp(doc = document) {
+export function createApp(doc = document, { platform = 'web' } = {}) {
   const $ = (id) => doc.getElementById(id);
   const els = {
     root: $('app'),
@@ -40,14 +40,17 @@ export function createApp(doc = document) {
 
   const appState = new AppState();
   const thought = new ThoughtState({ maxLength: config.maxLength });
-  const glasses = new GlassesAdapter({ viewport: els.viewport, app: els.root, label: els.viewportLabel });
+  const glasses = new GlassesAdapter({ viewport: els.viewport, app: els.root, label: els.viewportLabel, platform });
 
-  // Adapter selection: the Meta adapter only when a verified device API exists.
-  const adapter = MetaInteractionAdapter.isAvailable()
-    ? new MetaInteractionAdapter()
+  // Adapter selection. Meta documents no way to detect the glasses runtime, so
+  // the device build (glasses.html) opts in explicitly via `platform`.
+  const adapter = platform === 'meta-webapp'
+    ? new MetaInteractionAdapter({ textInput: els.textarea })
     : new WebInteractionAdapter({ root: els.root, textInput: els.textarea });
 
-  const speech = SpeechInput.isSupported() ? new SpeechInput() : null;
+  // Microphone access is not available to web apps on the glasses; the native
+  // composer handles dictation there.
+  const speech = platform !== 'meta-webapp' && SpeechInput.isSupported() ? new SpeechInput() : null;
 
   const burn = new BurnAnimation({
     stage: els.stage,
@@ -105,22 +108,26 @@ export function createApp(doc = document) {
   });
 
   // --- preview mode ------------------------------------------------------
-  for (const btn of els.chrome.querySelectorAll('[data-mode-btn]')) {
+  for (const btn of els.chrome?.querySelectorAll('[data-mode-btn]') ?? []) {
     btn.addEventListener('click', () => glasses.setMode(btn.dataset.modeBtn));
   }
   glasses.onChange((mode) => {
-    for (const btn of els.chrome.querySelectorAll('[data-mode-btn]')) {
+    for (const btn of els.chrome?.querySelectorAll('[data-mode-btn]') ?? []) {
       btn.classList.toggle('is-active', btn.dataset.modeBtn === mode);
     }
     burn.setBudget(mode === 'glasses');
     burn.setAmbient(appState.is(States.IDLE, States.EDITING, States.READY));
     // On glasses there is no pointer: the paper starts focused so the first pinch begins writing.
     if (mode === 'glasses' && appState.is(States.IDLE)) input.focusPaper();
-    try { const u = new URL(location.href); u.searchParams.set('mode', mode); history.replaceState(null, '', u); } catch { /* file:// */ }
+    if (!glasses.isDevice) {
+      try { const u = new URL(location.href); u.searchParams.set('mode', mode); history.replaceState(null, '', u); } catch { /* file:// */ }
+    }
   });
-  doc.addEventListener('keydown', (e) => {
-    if (e.key.toLowerCase() === 'g' && (e.metaKey || e.ctrlKey) && e.shiftKey) { e.preventDefault(); glasses.toggle(); }
-  });
+  if (!glasses.isDevice) {
+    doc.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'g' && (e.metaKey || e.ctrlKey) && e.shiftKey) { e.preventDefault(); glasses.toggle(); }
+    });
+  }
 
   // --- privacy: nothing survives leaving the page --------------------------
   window.addEventListener('pagehide', () => { input.clear(); burn.clear(); });
@@ -133,7 +140,7 @@ export function createApp(doc = document) {
     burn.setBudget(false);
 
     const params = new URLSearchParams(location.search);
-    if (params.get('mode') === 'glasses') glasses.setMode('glasses');
+    if (glasses.isDevice || params.get('mode') === 'glasses') glasses.setMode('glasses');
 
     try { await doc.fonts?.ready; } catch { /* fonts optional */ }
     input.layout();

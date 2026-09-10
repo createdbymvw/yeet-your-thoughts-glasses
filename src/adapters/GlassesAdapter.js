@@ -17,14 +17,25 @@ export class GlassesAdapter {
   #label;
   #listeners = new Set();
   #mode = 'browser';
+  #platform;
 
-  constructor({ body = document.body, viewport, app, label }) {
+  /**
+   * platform: 'web' (browser prototype) or 'meta-webapp' (the glasses build,
+   * glasses.html). On the device build the app is rendered 1:1 at 600 × 600
+   * with no preview frame and no scaling.
+   */
+  constructor({ body = document.body, viewport, app, label, platform = 'web' }) {
     this.#body = body;
     this.#viewport = viewport;
     this.#app = app;
     this.#label = label;
+    this.#platform = platform;
+    body.dataset.platform = platform;
     window.addEventListener('resize', this.#fit);
   }
+
+  get platform() { return this.#platform; }
+  get isDevice() { return this.#platform === 'meta-webapp'; }
 
   get mode() { return this.#mode; }
   get isGlasses() { return this.#mode === 'glasses'; }
@@ -55,7 +66,7 @@ export class GlassesAdapter {
   }
 
   #fit = () => {
-    if (!this.isGlasses) {
+    if (!this.isGlasses || this.isDevice) {
       this.#app.style.removeProperty('--glasses-scale');
       return;
     }

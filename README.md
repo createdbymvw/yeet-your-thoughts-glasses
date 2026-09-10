@@ -45,7 +45,9 @@ python3 dev/serve.py 5173      # same as npm start
 npx serve -l 5173 .            # if you prefer node
 ```
 
-Then open <http://127.0.0.1:5173>. Add `?mode=glasses` for the glasses preview.
+Then open <http://127.0.0.1:5173>. Add `?mode=glasses` for the glasses preview,
+or open <http://127.0.0.1:5173/glasses.html> for the actual device build at
+600 × 600 (use a 600 × 600 DevTools viewport and the arrow keys + Enter).
 
 ## Local development
 
@@ -112,15 +114,34 @@ onwards is fine.
 
 The interface is designed for a small monocular display first: one sheet, one
 action, four short chips, no scrolling, focus ring as the primary affordance.
-The **glasses preview** renders the app at 600 × 600 px inside a frame so it can
-be recorded and demoed without hardware.
+The **glasses preview** (`index.html?mode=glasses`) renders the app at
+600 × 600 px inside a frame so it can be recorded and demoed without hardware.
 
-Stage 2 — running on Meta display glasses — depends on what Meta officially
-exposes to third-party developers. The research, what can run unchanged, and
-what cannot be built yet are documented in
-[docs/meta-glasses.md](docs/meta-glasses.md). The device-specific code path is
-`src/adapters/MetaInteractionAdapter.js` and `src/adapters/GlassesAdapter.js`;
-nothing else needs to change for a port.
+**Meta Ray-Ban Display build.** Meta's Developer Preview of "Web Apps" runs
+plain HTML/CSS/JS from a public HTTPS URL directly on the glasses in a fixed
+600 × 600 viewport, with Neural Band gestures delivered as `ArrowUp/Down/Left/
+Right`, `Enter` and `Escape` key events. [`glasses.html`](glasses.html) is that
+build:
+
+- required meta tags (`mrbd-web-app-capable`, description, 600 × 600 viewport),
+  pure-black background (transparent on the additive display), PNG icon,
+  `focusable` targets with visible focus, no mic, no mode toggle;
+- `src/main-glasses.js` starts the same app with `platform: 'meta-webapp'`,
+  which selects `MetaInteractionAdapter` (arrows → navigate, pinch/Enter →
+  select, Escape → back, composer `change` → commit);
+- the `<textarea>` is itself the focusable paper target, because Meta's
+  starter kit documents the on-glasses handwriting/voice composer as
+  "focus the field, then pinch" — programmatic focus will not open it.
+
+To try it on hardware: host the repo over HTTPS, enable Developer Mode in the
+Meta AI app (Settings → App Info → tap the version five times), then App
+Settings → App Connections → Web Apps → Add a Web App → your
+`…/glasses.html` URL. Meta's Chrome extension "Meta Ray-Ban Display Simulator"
+previews the additive display with a D-pad and a QA checklist.
+
+Everything Meta documents, what runs unchanged, how text and gestures are
+exposed, deployment steps, and what cannot be built yet are written up with
+sources in [docs/meta-glasses.md](docs/meta-glasses.md).
 
 ## Known limitations
 
@@ -132,13 +153,19 @@ nothing else needs to change for a port.
   may drop frames; the particle budget already halves in glasses mode.
 - The glasses preview approximates size and pixel grid only. It does not
   emulate the display's brightness, colour range, field of view or optics.
-- No real glasses input path exists yet — see docs/meta-glasses.md.
+- The glasses build is untested on hardware. Text entry depends on Meta's
+  on-glasses composer, which the docs site lists as unsupported while Meta's
+  starter kit documents it; the preset chips are the fallback. See
+  docs/meta-glasses.md for the open verification list.
+- Web Apps on the glasses are a Developer Preview: share-link testers only,
+  no public publishing yet.
 
 ## Roadmap
 
 - [ ] Screenshots / GIF in this README
-- [ ] Glasses: replace the placeholder Meta adapter once an official gesture or
-      web API is available; use the native composer for text input
+- [ ] Verify `glasses.html` on a Meta Ray-Ban Display (composer, WebGL
+      performance, focus sizes); run Meta's simulator QA checklist
+- [ ] Publish a privacy statement alongside the hosted URL (Meta developer terms)
 - [ ] Sound: optional, very quiet paper crackle (off by default)
 - [ ] A "hold to burn" variant for pointer devices
 - [ ] Localised afterglow lines

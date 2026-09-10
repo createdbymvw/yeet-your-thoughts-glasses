@@ -43,8 +43,8 @@ export class InputController {
     this.#unsubs.push(this.#adapter.on(Intent.COMMIT, this.#onCommit));
     this.#unsubs.push(this.#adapter.on(Intent.BACK, this.#onBack));
 
-    // speech
-    if (this.#speech) {
+    // speech (the mic button does not exist on the glasses build)
+    if (this.#speech && mic) {
       mic.hidden = false;
       this.#unsubs.push(this.#speech.on('result', ({ text }) => {
         this.#thought.set(text);
@@ -62,7 +62,7 @@ export class InputController {
         mic.classList.remove('is-listening');
         mic.setAttribute('aria-pressed', 'false');
       }));
-    } else {
+    } else if (mic) {
       mic.hidden = true;
     }
 
@@ -88,9 +88,13 @@ export class InputController {
     this.#syncTextarea('');
   }
 
-  /** Move keyboard focus to the first target (used after reset in glasses mode). */
+  /**
+   * Put focus on the paper target. In the browser that is the paper card; on
+   * the glasses build the text field itself carries data-target="paper".
+   */
   focusPaper() {
-    this.#els.paper.focus({ preventScroll: true });
+    const target = this.#els.root.querySelector('[data-target="paper"]') ?? this.#els.paper;
+    target.focus({ preventScroll: true });
   }
 
   // --- text field --------------------------------------------------------
@@ -150,6 +154,8 @@ export class InputController {
 
     switch (target) {
       case 'paper':
+        // On the glasses build the textarea is the target itself: the pinch
+        // opens the native composer, and focusing again is harmless.
         this.#els.textarea.focus({ preventScroll: true });
         break;
 
