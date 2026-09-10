@@ -122,11 +122,9 @@ export function createApp(doc = document) {
     if (e.key.toLowerCase() === 'g' && (e.metaKey || e.ctrlKey) && e.shiftKey) { e.preventDefault(); glasses.toggle(); }
   });
 
-  // --- privacy: make sure nothing survives a tab hide/close ---------------
-  const scrub = () => { if (!appState.is(States.BURNING, States.AFTERGLOW)) { /* keep typing state on simple blur */ } };
+  // --- privacy: nothing survives leaving the page --------------------------
   window.addEventListener('pagehide', () => { input.clear(); burn.clear(); });
   window.addEventListener('beforeunload', () => { input.clear(); burn.clear(); });
-  doc.addEventListener('visibilitychange', scrub);
 
   // --- boot --------------------------------------------------------------
   async function start() {

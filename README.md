@@ -16,11 +16,16 @@ prototyped in the browser.
 
 ## Screenshots
 
-_Placeholder — add captures to `assets/screenshots/` and reference them here._
+| browser | glasses preview (600 × 600) |
+|---------|-----------------------------|
+| ![idle](assets/screenshots/idle.png) | ![glasses preview](assets/screenshots/glasses-preview.png) |
 
-| idle | burning | afterglow |
-|------|---------|-----------|
-| `assets/screenshots/idle.png` | `assets/screenshots/burning.gif` | `assets/screenshots/afterglow.png` |
+| the front reaches the words | almost gone |
+|-----------------------------|-------------|
+| ![burn, mid](assets/screenshots/burn-mid.png) | ![burn, late](assets/screenshots/burn-late.png) |
+
+_GIF placeholder: record the full 4 s burn + afterglow and add it as
+`assets/screenshots/burn.gif`._
 
 ## Quick start
 
