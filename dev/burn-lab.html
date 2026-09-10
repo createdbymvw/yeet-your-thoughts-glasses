@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>burn lab — yeet your thoughts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; background: #070605; color: #9d9284; font: 12px/1.4 Inter, system-ui, sans-serif; }
+    .lab { display: grid; grid-template-columns: 1fr 260px; height: 100vh; }
+    .view { position: relative; display: grid; place-items: center; overflow: hidden; }
+    .embers { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .paper-wrap { position: relative; width: 340px; height: 224px; }
+    .burn { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 30px 40px rgba(0,0,0,.7)); }
+    .panel { padding: 20px; border-left: 1px solid rgba(255,255,255,.08); display: grid; gap: 14px; align-content: start; }
+    label { display: grid; gap: 4px; }
+    input[type=range] { width: 100%; }
+    button { font: inherit; color: #ede5d6; background: none; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+    code { color: #ede5d6; }
+    .note { opacity: .7; }
+  </style>
+</head>
+<body>
+  <div class="lab">
+    <div class="view" id="stage">
+      <canvas class="embers" id="embers"></canvas>
+      <div class="paper-wrap" id="paper-wrap"><canvas class="burn" id="burn"></canvas></div>
+    </div>
+    <div class="panel">
+      <strong style="color:#ede5d6">burn lab</strong>
+      <p class="note">Dev-only. Renders the burn shader at a fixed threshold with sample text so the effect can be tuned frame by frame. Not linked from the app.</p>
+      <label>threshold <code id="tv">-0.15</code><input id="t" type="range" min="-0.15" max="1.35" step="0.005" value="-0.15"></label>
+      <label>time (s) <code id="timev">0</code><input id="time" type="range" min="0" max="10" step="0.01" value="0"></label>
+      <label>seed <code id="seedv">7</code><input id="seed" type="range" min="0" max="100" step="1" value="7"></label>
+      <label><input id="sw" type="checkbox"> force software renderer</label>
+      <button id="play">play 4 s burn</button>
+      <div>renderer: <code id="kind">–</code></div>
+    </div>
+  </div>
+  <script type="module">
+    import { renderPaper } from '../src/animation/PaperRaster.js';
+    import { GLBurn, SoftwareBurn } from '../src/animation/BurnShader.js';
+    import { Embers } from '../src/animation/Embers.js';
+    import { THRESHOLD_START, THRESHOLD_END } from '../src/animation/noise.js';
+
+    const $ = (id) => document.getElementById(id);
+    const burnCanvas = $('burn'), emberCanvas = $('embers'), stage = $('stage'), wrap = $('paper-wrap');
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    const embers = new Embers(emberCanvas);
+    embers.setBudget(260, 2);
+    embers.resize(stage.clientWidth, stage.clientHeight, dpr);
+
+    let burner = null;
+    let seed = 7;
+    function makeBurner() {
+      burner?.dispose();
+      burner = $('sw').checked ? new SoftwareBurn(burnCanvas) : new GLBurn(burnCanvas);
+      if (!burner.init()) { burner = new SoftwareBurn(burnCanvas); burner.init(); }
+      $('kind').textContent = burner.kind;
+      const raster = renderPaper({
+        width: 340, height: 224, scale: dpr, text: 'I can set this down for now.',
+        style: { fontFamily: '"Instrument Serif", Georgia, serif', fontSize: 25, lineHeight: 30.5, color: '#2a221b', paper: '#f1e9da', padding: 26 },
+      });
+      burner.setPaper(raster, seed);
+      draw();
+    }
+    function rect() {
+      const s = stage.getBoundingClientRect(), p = wrap.getBoundingClientRect();
+      return { x: p.left - s.left, y: p.top - s.top, w: p.width, h: p.height };
+    }
+    function draw() {
+      const threshold = parseFloat($('t').value), time = parseFloat($('time').value);
+      $('tv').textContent = threshold.toFixed(3); $('timev').textContent = time.toFixed(2);
+      burner.render({ threshold, time, seed });
+    }
+    for (const id of ['t', 'time']) $(id).addEventListener('input', draw);
+    $('seed').addEventListener('input', () => { seed = parseInt($('seed').value, 10); $('seedv').textContent = seed; makeBurner(); });
+    $('sw').addEventListener('change', makeBurner);
+
+    let playing = false;
+    $('play').addEventListener('click', () => {
+      if (playing) return;
+      playing = true;
+      const start = performance.now(); const r = rect(); const aspect = r.w / r.h;
+      let last = start;
+      const tick = (now) => {
+        const dt = Math.min(0.05, (now - last) / 1000); last = now;
+        const t = Math.min(1, (now - start) / 4000);
+        const eased = 0.5 - 0.5 * Math.cos(Math.PI * t);
+        const threshold = THRESHOLD_START + (THRESHOLD_END - THRESHOLD_START) * eased;
+        $('t').value = threshold; $('time').value = ((now - start) / 1000).toFixed(2);
+        draw();
+        embers.emitFromFront(r, threshold, aspect, seed, dt, Math.sin(Math.PI * Math.min(1, t * 1.05)) * 0.9 + 0.1);
+        embers.update(dt); embers.render();
+        if (t < 1) requestAnimationFrame(tick);
+        else { embers.linger(r, 1.6); const fade = (n2) => { const d2 = Math.min(0.05, (n2 - last) / 1000); last = n2; embers.update(d2); embers.render(); if (embers.isBusy) requestAnimationFrame(fade); else playing = false; }; requestAnimationFrame(fade); }
+      };
+      requestAnimationFrame(tick);
+    });
+
+    // allow ?t=0.5&seed=3&time=1.2 for screenshot automation
+    const q = new URLSearchParams(location.search);
+    if (q.has('seed')) { $('seed').value = q.get('seed'); seed = parseInt(q.get('seed'), 10); $('seedv').textContent = seed; }
+    if (q.has('t')) $('t').value = q.get('t');
+    if (q.has('time')) $('time').value = q.get('time');
+    if (q.has('sw')) $('sw').checked = true;
+    makeBurner();
+  </script>
+</body>
+</html>

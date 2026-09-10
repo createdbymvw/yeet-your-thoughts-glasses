@@ -499,6 +499,11 @@ body[data-mode="glasses"] .viewport__label { display: block; }
    Small screens
    -------------------------------------------------------------------------- */
 
+@media (max-width: 640px) {
+  /* keep the mode toggle clear of the title */
+  .masthead { padding-top: 64px; }
+  .chrome__note { right: 16px; }
+}
 @media (max-width: 420px) {
   :root { --paper-pad: 20px; --thought-size: 22px; }
   .chip { padding: 6px 10px; }

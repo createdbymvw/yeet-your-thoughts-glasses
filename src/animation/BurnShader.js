@@ -106,6 +106,7 @@ void main() {
 
   // stage one: a warm ember line along the bottom edge before the front exists
   float startGlow = exp(-uv.y * 24.0)
+                  * (0.45 + 0.9 * fine)
                   * smoothstep(-0.15, -0.02, u_threshold)
                   * (1.0 - smoothstep(0.0, 0.22, u_threshold));
   col += emberCol * startGlow * (0.6 + 0.4 * flick);
@@ -308,7 +309,7 @@ export class SoftwareBurn {
       a *= edge * (1 - holes);
 
       const v = 1 - Math.floor(i / this.#w) / this.#h;
-      const startGlow = Math.exp(-v * 24) * smooth(-0.15, -0.02, threshold) * (1 - smooth(0, 0.22, threshold));
+      const startGlow = Math.exp(-v * 24) * (0.45 + 0.9 * this.#crumble[i]) * smooth(-0.15, -0.02, threshold) * (1 - smooth(0, 0.22, threshold));
       r += er * startGlow * 0.8; g += eg * startGlow * 0.8; b += eb * startGlow * 0.8;
 
       o[j] = Math.min(255, r * 255); o[j + 1] = Math.min(255, g * 255); o[j + 2] = Math.min(255, b * 255);

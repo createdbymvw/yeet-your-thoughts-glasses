@@ -5,7 +5,7 @@
   "description": "A tiny glasses ritual for writing down a thought, burning it, and moving on.",
   "type": "module",
   "scripts": {
-    "start": "python3 -m http.server 5173 --bind 127.0.0.1",
+    "start": "python3 dev/serve.py 5173",
     "start:node": "npx --yes serve -l 5173 ."
   },
   "license": "SEE LICENSE IN LICENSE"

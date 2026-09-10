@@ -5,12 +5,13 @@ import { InteractionAdapter, Intent } from './InteractionAdapter.js';
  *
  * Pointer:   click/tap on any [data-target]            → select
  * Keyboard:  ← ↑ / → ↓ (outside the text field)       → navigate prev/next
- *            Enter / Space on a non-button target       → select
+ *            Enter / Space on a focused target          → select
  *            Enter (no shift) inside the text field     → commit
  *            Escape                                     → back
  *
- * Native <button> elements already turn Enter/Space into click events, so we
- * only synthesize select for non-button targets (the paper) to avoid doubles.
+ * Enter/Space are handled here (with preventDefault) rather than through the
+ * browser's native button activation, so "pinch" behaves identically for the
+ * paper, chips and Burn This, and no double select can occur.
  */
 export class WebInteractionAdapter extends InteractionAdapter {
   #root;
@@ -30,12 +31,21 @@ export class WebInteractionAdapter extends InteractionAdapter {
   attach() {
     this.#root.addEventListener('click', this.#onClick);
     document.addEventListener('keydown', this.#onKeyDown);
+    document.addEventListener('keyup', this.#onKeyUp);
   }
 
   detach() {
     this.#root.removeEventListener('click', this.#onClick);
     document.removeEventListener('keydown', this.#onKeyDown);
+    document.removeEventListener('keyup', this.#onKeyUp);
   }
+
+  /** Space activates buttons on keyup in most browsers; swallow it so select fires once. */
+  #onKeyUp = (event) => {
+    if (event.key === ' ' && event.target !== this.#textInput && event.target.closest?.(this.#targetSelector)) {
+      event.preventDefault();
+    }
+  };
 
   #onClick = (event) => {
     const el = event.target.closest(this.#targetSelector);
@@ -76,7 +86,7 @@ export class WebInteractionAdapter extends InteractionAdapter {
       case 'Enter':
       case ' ': {
         const el = event.target.closest?.(this.#targetSelector);
-        if (!el || el.tagName === 'BUTTON') return; // buttons synthesize click natively
+        if (!el || el.disabled) return;
         event.preventDefault();
         this.emit(Intent.SELECT, { target: el.dataset.target, element: el, source: 'keyboard' });
         return;

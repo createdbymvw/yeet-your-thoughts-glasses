@@ -114,6 +114,8 @@ export function createApp(doc = document) {
     }
     burn.setBudget(mode === 'glasses');
     burn.setAmbient(appState.is(States.IDLE, States.EDITING, States.READY));
+    // On glasses there is no pointer: the paper starts focused so the first pinch begins writing.
+    if (mode === 'glasses' && appState.is(States.IDLE)) input.focusPaper();
     try { const u = new URL(location.href); u.searchParams.set('mode', mode); history.replaceState(null, '', u); } catch { /* file:// */ }
   });
   doc.addEventListener('keydown', (e) => {
