@@ -1,0 +1,541 @@
+/* ==========================================================================
+   yeet your thoughts — stylesheet
+   Editorial, near-black, one paper card. Everything scales from --paper-w.
+   ========================================================================== */
+
+:root {
+  --bg: #070605;
+  --bg-warm: #14100c;
+
+  --paper: #f1e9da;
+  --paper-ink: #2a221b;
+  --paper-placeholder: #a2988a;
+
+  --ink: #ede5d6;
+  --ink-dim: #9d9284;
+  --ink-faint: #5d554b;
+  --line: rgba(255, 255, 255, 0.12);
+
+  --ember: #ff7a1a;
+  --ember-hot: #ffc36b;
+  --ember-deep: #c8320a;
+
+  --serif: "Instrument Serif", "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+
+  --paper-w: min(340px, 84vw);
+  --paper-ratio: 0.66;
+  --paper-h: calc(var(--paper-w) * var(--paper-ratio));
+  --paper-pad: 26px;
+  --thought-size: 25px;
+
+  --radius: 3px;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --t-fast: 180ms;
+  --t-slow: 600ms;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button:disabled { cursor: default; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Viewport + app shell
+   -------------------------------------------------------------------------- */
+
+.viewport {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background:
+    radial-gradient(60% 40% at 50% 100%, rgba(255, 96, 20, 0.07), transparent 70%),
+    var(--bg);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Masthead */
+.masthead {
+  text-align: center;
+  padding: clamp(22px, 6vh, 56px) 20px 0;
+}
+.title {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(38px, 7vw, 60px);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.tagline {
+  margin: 10px 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(16px, 2.4vw, 19px);
+  color: var(--ink-dim);
+}
+
+/* Stage */
+.stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 18px;
+  padding: 12px 20px;
+  min-height: 0;
+}
+.embers {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Paper
+   -------------------------------------------------------------------------- */
+
+.paper-wrap {
+  position: relative;
+  z-index: 1;
+  width: var(--paper-w);
+  height: var(--paper-h);
+}
+
+.paper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--paper-pad);
+  background: var(--paper);
+  border-radius: var(--radius);
+  box-shadow:
+    0 40px 70px -24px rgba(0, 0, 0, 0.9),
+    0 14px 40px -10px rgba(255, 110, 30, 0.10),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  outline: none;
+  cursor: text;
+  transition: opacity var(--t-slow) var(--ease), transform var(--t-slow) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+/* grain */
+.paper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.11;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.3  0 0 0 0 0.25  0 0 0 0 0.2  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 200px 200px;
+}
+/* soft tonal shading so it reads as a physical sheet */
+.paper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 30%, rgba(120, 80, 40, 0.05) 100%),
+    radial-gradient(120% 80% at 50% 110%, rgba(255, 120, 40, 0.10), transparent 60%);
+}
+.paper:focus-visible,
+.paper:focus-within {
+  box-shadow:
+    0 40px 70px -24px rgba(0, 0, 0, 0.9),
+    0 14px 46px -8px rgba(255, 122, 26, 0.22),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    0 0 0 1px rgba(255, 122, 26, 0.45);
+}
+
+.thought {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  max-height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  resize: none;
+  outline: none;
+  overflow: hidden;
+  text-align: center;
+  font-family: var(--serif);
+  font-size: var(--thought-size);
+  line-height: 1.22;
+  color: var(--paper-ink);
+  caret-color: var(--ember-deep);
+}
+.thought::placeholder {
+  color: var(--paper-placeholder);
+  font-style: italic;
+  opacity: 1;
+}
+.thought::selection { background: rgba(255, 122, 26, 0.35); }
+
+/* burn canvas sits exactly over the paper */
+.burn {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Hint / afterglow copy
+   -------------------------------------------------------------------------- */
+
+.hint {
+  margin: 0;
+  min-height: 1.4em;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  transition: opacity var(--t-slow) var(--ease);
+}
+.hint__glasses { display: none; }
+
+.afterglow {
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  padding: 0 24px;
+  text-align: center;
+  font-family: var(--serif);
+  font-size: clamp(24px, 4.4vw, 34px);
+  line-height: 1.15;
+  color: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 700ms var(--ease), transform 700ms var(--ease);
+}
+.afterglow.is-visible { opacity: 1; transform: translateY(-50%); }
+.afterglow.is-entering { transform: translateY(calc(-50% + 6px)); }
+
+/* --------------------------------------------------------------------------
+   Controls
+   -------------------------------------------------------------------------- */
+
+.controls {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  padding: 8px 20px clamp(22px, 5vh, 44px);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity var(--t-slow) var(--ease);
+}
+.chip {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--ink-dim);
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
+}
+.chip:hover { color: var(--ink); border-color: rgba(255, 255, 255, 0.3); }
+.chip:focus-visible { outline: none; color: var(--ink); border-color: var(--ember); box-shadow: 0 0 0 3px rgba(255, 122, 26, 0.2); }
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 42px;
+}
+
+.burn-btn {
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--ink);
+  padding: 12px 22px;
+  border: 1px solid rgba(255, 122, 26, 0.55);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 122, 26, 0.14), rgba(255, 122, 26, 0.04));
+  box-shadow: 0 0 24px -6px rgba(255, 122, 26, 0.35);
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity var(--t-slow) var(--ease), transform var(--t-slow) var(--ease),
+              border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+}
+.burn-btn.is-available { opacity: 1; transform: none; pointer-events: auto; }
+.burn-btn:hover, .burn-btn:focus-visible {
+  outline: none;
+  border-color: var(--ember);
+  background: linear-gradient(180deg, rgba(255, 122, 26, 0.26), rgba(255, 122, 26, 0.08));
+  box-shadow: 0 0 34px -4px rgba(255, 122, 26, 0.6), 0 0 0 3px rgba(255, 122, 26, 0.18);
+}
+.burn-btn:active { transform: scale(0.98); }
+
+.mic {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink-dim);
+  transition: color var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast);
+}
+.mic[hidden] { display: none; }
+.mic:hover, .mic:focus-visible { outline: none; color: var(--ink); border-color: rgba(255, 255, 255, 0.3); }
+.mic:focus-visible { border-color: var(--ember); box-shadow: 0 0 0 3px rgba(255, 122, 26, 0.2); }
+.mic.is-listening {
+  color: var(--ember-hot);
+  border-color: var(--ember);
+  animation: mic-pulse 1.4s ease-in-out infinite;
+}
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 122, 26, 0.45); }
+  50%      { box-shadow: 0 0 0 8px rgba(255, 122, 26, 0); }
+}
+
+/* --------------------------------------------------------------------------
+   State-driven visibility (body[data-state] mirrors AppState)
+   -------------------------------------------------------------------------- */
+
+body:not([data-state="idle"]) .hint { opacity: 0; }
+
+body[data-state="burning"] .paper,
+body[data-state="afterglow"] .paper,
+body[data-state="reset"] .paper { opacity: 0; pointer-events: none; }
+
+body[data-state="burning"] .burn,
+body[data-state="afterglow"] .burn { opacity: 1; }
+
+body[data-state="burning"] .chips,
+body[data-state="afterglow"] .chips,
+body[data-state="reset"] .chips,
+body[data-state="burning"] .actions,
+body[data-state="afterglow"] .actions,
+body[data-state="reset"] .actions { opacity: 0; pointer-events: none; }
+.actions { transition: opacity var(--t-slow) var(--ease); }
+
+body[data-state="reset"] .paper { transition: none; }
+body[data-state="idle"] .paper { animation: paper-in 700ms var(--ease) both; }
+@keyframes paper-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+   Chrome outside the experience (never rendered on glasses)
+   -------------------------------------------------------------------------- */
+
+.chrome {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+.chrome__modes {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(7, 6, 5, 0.6);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+}
+.chrome__mode {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-dim);
+  padding: 6px 11px;
+  border-radius: 999px;
+  transition: color var(--t-fast), background var(--t-fast);
+}
+.chrome__mode:hover { color: var(--ink); }
+.chrome__mode.is-active { color: var(--ink); background: rgba(255, 255, 255, 0.08); }
+.chrome__mode:focus-visible { outline: 1px solid var(--ember); outline-offset: 2px; }
+.chrome__note {
+  position: absolute;
+  left: 16px;
+  bottom: 12px;
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--ink-faint);
+  pointer-events: auto;
+}
+
+/* --------------------------------------------------------------------------
+   Glasses preview mode
+   Approximates a 600 × 600 monocular display (Meta Ray-Ban Display).
+   The .app is rendered at its native size and scaled to fit the window.
+   -------------------------------------------------------------------------- */
+
+body[data-mode="glasses"] {
+  background: #100e0c;
+  --paper-w: 380px;
+  --paper-ratio: 0.62;
+  --paper-pad: 28px;
+  --thought-size: 27px;
+}
+body[data-mode="glasses"] .viewport {
+  background:
+    radial-gradient(70% 70% at 50% 50%, rgba(255, 255, 255, 0.025), transparent 70%),
+    #100e0c;
+}
+body[data-mode="glasses"] .app {
+  width: 600px;
+  height: 600px;
+  border-radius: 36px;
+  transform: scale(var(--glasses-scale, 1));
+  transform-origin: center center;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.07),
+    0 0 0 10px #0a0908,
+    0 0 0 11px rgba(255, 255, 255, 0.05),
+    0 60px 120px -30px rgba(0, 0, 0, 0.9);
+}
+body[data-mode="glasses"] .masthead { padding-top: 34px; }
+body[data-mode="glasses"] .title { font-size: 34px; }
+body[data-mode="glasses"] .tagline { display: none; }
+body[data-mode="glasses"] .stage { gap: 14px; }
+body[data-mode="glasses"] .hint { font-size: 13px; color: var(--ink-dim); }
+body[data-mode="glasses"] .hint__browser { display: none; }
+body[data-mode="glasses"] .hint__glasses { display: inline; }
+body[data-mode="glasses"] .afterglow { font-size: 34px; }
+body[data-mode="glasses"] .controls { padding-bottom: 34px; gap: 16px; }
+body[data-mode="glasses"] .chip { font-size: 13px; padding: 8px 14px; }
+body[data-mode="glasses"] .burn-btn { font-size: 13px; padding: 13px 26px; }
+body[data-mode="glasses"] .mic { display: none; } /* glasses use the native dictation composer */
+
+/* glasses: focus ring is the primary affordance (arrow to move, pinch to select) */
+body[data-mode="glasses"] [data-target]:focus-visible,
+body[data-mode="glasses"] [data-target].is-focused {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ember), 0 0 22px -2px rgba(255, 122, 26, 0.55);
+  color: var(--ink);
+}
+body[data-mode="glasses"] .paper:focus-visible,
+body[data-mode="glasses"] .paper.is-focused {
+  box-shadow:
+    0 40px 70px -24px rgba(0, 0, 0, 0.9),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    0 0 0 2px var(--ember),
+    0 0 30px -2px rgba(255, 122, 26, 0.5);
+}
+
+.viewport__label {
+  position: absolute;
+  bottom: 18px;
+  left: 0; right: 0;
+  margin: 0;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  display: none;
+}
+body[data-mode="glasses"] .viewport__label { display: block; }
+
+/* --------------------------------------------------------------------------
+   Small screens
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 420px) {
+  :root { --paper-pad: 20px; --thought-size: 22px; }
+  .chip { padding: 6px 10px; }
+}
+@media (max-height: 560px) {
+  .masthead { padding-top: 14px; }
+  .title { font-size: 34px; }
+  .tagline { display: none; }
+  .controls { padding-bottom: 14px; gap: 10px; }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion
+   The burn becomes a quiet crossfade to dark with a brief glow; no particles.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+  .paper, .burn-btn, .afterglow, .hint, .chips, .actions { transition-duration: 200ms; }
+  .mic.is-listening { animation: none; box-shadow: 0 0 0 3px rgba(255, 122, 26, 0.35); }
+  body[data-state="idle"] .paper { animation: none; }
+
+  body[data-state="burning"] .paper {
+    opacity: 1;
+    transition: filter 1400ms ease-in, opacity 1400ms ease-in 300ms;
+    filter: brightness(0.15) sepia(1) saturate(6) hue-rotate(-20deg);
+    opacity: 0;
+  }
+  body[data-state="burning"] .paper-wrap::after {
+    content: "";
+    position: absolute;
+    inset: -20px;
+    border-radius: 20px;
+    background: radial-gradient(60% 50% at 50% 100%, rgba(255, 122, 26, 0.35), transparent 70%);
+    animation: none;
+    opacity: 1;
+    transition: opacity 1200ms ease-out 600ms;
+  }
+  body[data-state="afterglow"] .paper-wrap::after { opacity: 0; }
+}

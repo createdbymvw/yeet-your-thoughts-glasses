@@ -1,0 +1,17 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Node (only used for the optional dev server)
+node_modules/
+npm-debug.log*
+
+# Local scratch / recordings
+*.log
+.cache/
+recordings/

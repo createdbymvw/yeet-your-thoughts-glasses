@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="referrer" content="no-referrer">
+  <meta name="description" content="write it. burn it. let it go. A tiny private ritual for smart glasses and browsers.">
+  <title>yeet your thoughts</title>
+  <!-- Web fonts are optional. Remove these two lines for a fully offline build; the CSS falls back to system serif/sans. -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles/main.css">
+</head>
+<body data-mode="browser" data-state="idle">
+
+  <!-- Chrome that lives OUTSIDE the experience: mode toggle + privacy note. Never rendered on glasses. -->
+  <div class="chrome" id="chrome">
+    <div class="chrome__modes" role="group" aria-label="preview mode">
+      <button class="chrome__mode is-active" data-mode-btn="browser" type="button">browser</button>
+      <button class="chrome__mode" data-mode-btn="glasses" type="button">glasses preview</button>
+    </div>
+    <p class="chrome__note">thoughts stay on this device. nothing is saved, sent, or logged.</p>
+  </div>
+
+  <div class="viewport" id="viewport">
+    <div class="app" id="app">
+
+      <header class="masthead">
+        <h1 class="title">yeet your thoughts</h1>
+        <p class="tagline">write it. burn it. let it go.</p>
+      </header>
+
+      <main class="stage" id="stage">
+        <canvas class="embers" id="embers" aria-hidden="true"></canvas>
+
+        <div class="paper-wrap" id="paper-wrap">
+          <div class="paper" id="paper" data-target="paper" tabindex="0" role="button" aria-label="write a thought">
+            <label class="sr-only" for="thought">your thought</label>
+            <textarea id="thought" class="thought" rows="1" maxlength="140"
+              placeholder="what can leave for now?"
+              autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+              enterkeyhint="done" data-no-persist="true"></textarea>
+          </div>
+          <canvas class="burn" id="burn" aria-hidden="true"></canvas>
+        </div>
+
+        <p class="hint" id="hint" aria-hidden="true">
+          <span class="hint__browser">tap the paper to write</span>
+          <span class="hint__glasses">pinch to write or speak</span>
+        </p>
+
+        <p class="afterglow" id="afterglow" aria-live="polite"></p>
+      </main>
+
+      <footer class="controls">
+        <div class="chips" id="chips" role="group" aria-label="quick thoughts">
+          <button class="chip" type="button" data-target="chip" data-preset="looping">looping</button>
+          <button class="chip" type="button" data-target="chip" data-preset="too much">too much</button>
+          <button class="chip" type="button" data-target="chip" data-preset="not mine">not mine</button>
+          <button class="chip" type="button" data-target="chip" data-preset="for later">for later</button>
+        </div>
+
+        <div class="actions">
+          <button class="mic" id="mic" type="button" data-target="mic" hidden aria-label="dictate" aria-pressed="false"
+            title="dictate (uses your browser's speech service)">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+              <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/>
+              <path d="M6 11a6 6 0 0 0 12 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M12 17v3M9.5 20.5h5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="burn-btn" id="burn-btn" type="button" data-target="burn" disabled>Burn This</button>
+        </div>
+      </footer>
+
+    </div>
+    <p class="viewport__label" id="viewport-label" aria-hidden="true"></p>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
