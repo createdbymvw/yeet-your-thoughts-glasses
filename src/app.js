@@ -18,7 +18,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
  *
  * Nothing in here touches raw device events; that is the adapters' job.
  */
-export function createApp(doc = document, { platform = 'web' } = {}) {
+export function createApp(doc = document, { platform = 'web', maxLength = config.maxLength } = {}) {
   const $ = (id) => doc.getElementById(id);
   const els = {
     root: $('app'),
@@ -34,12 +34,13 @@ export function createApp(doc = document, { platform = 'web' } = {}) {
     burnButton: $('burn-btn'),
     mic: $('mic'),
     chrome: $('chrome'),
+    counter: $('counter'),
   };
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const appState = new AppState();
-  const thought = new ThoughtState({ maxLength: config.maxLength });
+  const thought = new ThoughtState({ maxLength });
   const glasses = new GlassesAdapter({ viewport: els.viewport, app: els.root, label: els.viewportLabel, platform });
 
   // Adapter selection. Meta documents no way to detect the glasses runtime, so
@@ -60,6 +61,9 @@ export function createApp(doc = document, { platform = 'web' } = {}) {
     reducedMotion,
     getScale: () => glasses.scale,
   });
+
+  // optional character counter (glasses build)
+  if (els.counter) thought.subscribe((t) => { els.counter.textContent = `${t.length}/${maxLength}`; });
 
   // --- state → DOM -------------------------------------------------------
   appState.subscribe((state) => {
@@ -153,18 +157,24 @@ export function createApp(doc = document, { platform = 'web' } = {}) {
   return { start, appState, thought, glasses, adapter, burn, input, speech };
 }
 
+/**
+ * How the burning sheet should look. Defaults to the live paper/text field
+ * styles; a build can override them with --burn-* custom properties on .paper
+ * (the glasses build shows a dark input field but burns a cream sheet).
+ */
 function readPaperStyle(els) {
   const cs = getComputedStyle(els.textarea);
   const ps = getComputedStyle(els.paper);
-  const fontSize = parseFloat(cs.fontSize);
-  const lh = parseFloat(cs.lineHeight);
+  const v = (name) => ps.getPropertyValue(name).trim();
+  const fontSize = parseFloat(v('--burn-font-size')) || parseFloat(cs.fontSize);
+  const lh = parseFloat(v('--burn-line-height')) || parseFloat(cs.lineHeight);
   return {
-    fontFamily: cs.fontFamily,
+    fontFamily: v('--burn-font') || cs.fontFamily,
     fontSize,
     lineHeight: Number.isFinite(lh) ? lh : fontSize * 1.22,
-    color: cs.color,
-    paper: ps.backgroundColor,
-    padding: parseFloat(ps.paddingLeft),
+    color: v('--burn-ink') || cs.color,
+    paper: v('--burn-paper') || ps.backgroundColor,
+    padding: parseFloat(v('--burn-padding')) || parseFloat(ps.paddingLeft),
   };
 }
 

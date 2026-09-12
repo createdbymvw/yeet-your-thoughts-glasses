@@ -1,8 +1,9 @@
 /* ==========================================================================
    Glasses build (glasses.html) — Meta Ray-Ban Display Web App.
-   Loaded after main.css. Fixed 600 × 600, no preview frame, pure black
-   background (renders transparent on the additive display), larger type and
-   focus targets. Sources: docs/meta-glasses.md.
+   Loaded after main.css and overrides it for the device:
+   fixed 600 × 600, #000 page background (transparent on the additive
+   display), dark warm surfaces, large native-size type, 88px targets.
+   Sources: Meta display guidelines (docs/meta-glasses.md).
    ========================================================================== */
 
 html, body {
@@ -13,12 +14,26 @@ html, body {
 }
 
 body[data-platform="meta-webapp"] {
+  /* palette: Meta ranges, warmed to the ember language */
   --bg: #000;
-  --paper-w: 400px;
-  --paper-ratio: 0.58;
-  --paper-pad: 26px;
-  --thought-size: 27px;
+  --surface: #131110;        /* within #0a0a0f – #1C1E21 */
+  --surface-2: #1b1816;
+  --line: #3a322b;
+  --text: #ffffff;
+  --text-2: #e4e6eb;
+  --text-3: #b0b3b8;
+  --orange: #ff8a3c;
+  --orange-deep: #e8651c;
+  --cream: #ffd9b0;
+
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+
+  font-family: var(--sans);
+  color: var(--text);
 }
+
+/* --- shell ---------------------------------------------------------------- */
 
 body[data-platform="meta-webapp"] .viewport {
   position: static;
@@ -27,60 +42,302 @@ body[data-platform="meta-webapp"] .viewport {
   height: 600px;
   background: #000;
 }
-
-/* no frame, no scaling on device */
 body[data-platform="meta-webapp"] .app {
+  display: block;
   width: 600px;
   height: 600px;
   border-radius: 0;
   box-shadow: none;
   transform: none;
-  background:
-    radial-gradient(60% 34% at 50% 100%, rgba(255, 96, 20, 0.10), transparent 70%),
-    #000;
+  background: #000;
+  overflow: hidden;
+}
+/* the stage is the whole screen; embers fly across all of it */
+body[data-platform="meta-webapp"] .stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0;
+  width: 600px;
+  height: 600px;
+  padding: 14px 20px 12px;          /* ≥ 8px safe margin */
+  box-sizing: border-box;
+}
+body[data-platform="meta-webapp"] .embers { z-index: 0; }
+body[data-platform="meta-webapp"] .stage > *:not(.embers):not(.afterglow) { position: relative; z-index: 1; flex: none; }
+
+/* everything in the entry UI fades away while the paper burns */
+body[data-platform="meta-webapp"] .entry { transition: opacity 300ms ease; }
+body[data-platform="meta-webapp"][data-state="burning"] .entry,
+body[data-platform="meta-webapp"][data-state="afterglow"] .entry,
+body[data-platform="meta-webapp"][data-state="reset"] .entry { opacity: 0; pointer-events: none; }
+
+/* --- header --------------------------------------------------------------- */
+
+body[data-platform="meta-webapp"] .top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+  margin-bottom: 8px;
+}
+body[data-platform="meta-webapp"] .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+/* three-flame mark, pure CSS (no SVG icons on the glasses) */
+body[data-platform="meta-webapp"] .mark { position: relative; width: 28px; height: 26px; }
+body[data-platform="meta-webapp"] .mark i {
+  position: absolute;
+  bottom: 0;
+  width: 6px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--cream), var(--orange) 55%, var(--orange-deep));
+}
+body[data-platform="meta-webapp"] .mark i:nth-child(1) { left: 3px;  height: 14px; transform: rotate(-22deg); transform-origin: bottom; }
+body[data-platform="meta-webapp"] .mark i:nth-child(2) { left: 11px; height: 24px; }
+body[data-platform="meta-webapp"] .mark i:nth-child(3) { left: 19px; height: 14px; transform: rotate(22deg);  transform-origin: bottom; }
+body[data-platform="meta-webapp"] .pill {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-2);
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
 }
 
-body[data-platform="meta-webapp"] .masthead { padding: 30px 20px 0; }
-body[data-platform="meta-webapp"] .title { font-size: 30px; }
-body[data-platform="meta-webapp"] .stage { gap: 10px; padding: 8px 20px; }
+/* --- hero ----------------------------------------------------------------- */
 
-/* Meta guidance: ≥16 px body text, 20–24 px primary content */
-body[data-platform="meta-webapp"] .thought::placeholder { font-size: 24px; }
-body[data-platform="meta-webapp"] .afterglow { font-size: 34px; }
-body[data-platform="meta-webapp"] .controls { padding: 6px 20px 28px; gap: 14px; }
-body[data-platform="meta-webapp"] .chip {
-  font-size: 16px;
-  min-height: 48px;
-  padding: 0 18px;
-  color: var(--ink);
-  border-color: rgba(255, 255, 255, 0.28);
+body[data-platform="meta-webapp"] .hero { text-align: center; }
+body[data-platform="meta-webapp"] .eyebrow {
+  margin: 0 0 2px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--orange);
+}
+body[data-platform="meta-webapp"] .headline {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 50px;
+  line-height: 0.98;
+  letter-spacing: -0.01em;
+  color: #fff6ea;
+}
+body[data-platform="meta-webapp"] .sub {
+  margin: 8px 0 0;
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+/* --- field ---------------------------------------------------------------- */
+
+body[data-platform="meta-webapp"] .field-labels {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 14px 0 6px;
+}
+body[data-platform="meta-webapp"] .caps {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+body[data-platform="meta-webapp"] .cue {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--orange);
+}
+
+body[data-platform="meta-webapp"] .paper-wrap {
+  width: 100%;
+  height: 100px;
+  flex: none;
+  z-index: 1;
+}
+body[data-platform="meta-webapp"] .paper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 22px 0 26px;
+  background: var(--surface-2);
+  border: 3px solid var(--line);
+  border-radius: 22px;
+  box-shadow: none;
+  cursor: default;
+  transition: border-color 200ms ease, opacity 250ms ease;
+
+  /* what the burning sheet looks like (read by app.js → PaperRaster) */
+  --burn-paper: #f1e9da;
+  --burn-ink: #2a221b;
+  --burn-font: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --burn-font-size: 36px;
+  --burn-line-height: 42px;
+  --burn-padding: 40px;
+}
+body[data-platform="meta-webapp"] .paper::before,
+body[data-platform="meta-webapp"] .paper::after { display: none; }  /* no paper grain on the field */
+body[data-platform="meta-webapp"] .paper:focus-within {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 4px #000, 0 0 0 7px var(--cream);
+}
+body[data-platform="meta-webapp"] .thought {
+  width: calc(100% - 60px);
+  text-align: left;
+  font-family: var(--sans);
+  font-size: 25px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--text);
+  caret-color: var(--orange);
+  cursor: default;
+}
+body[data-platform="meta-webapp"] .thought:focus,
+body[data-platform="meta-webapp"] .thought:focus-visible,
+body[data-platform="meta-webapp"] .thought.is-focused {
+  outline: none;
+  box-shadow: none;   /* the ring lives on .paper:focus-within */
+}
+body[data-platform="meta-webapp"] .thought::placeholder {
+  font-style: normal;
+  color: var(--text-3);
+}
+body[data-platform="meta-webapp"] .counter {
+  position: absolute;
+  right: 18px;
+  bottom: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+/* during the burn the sheet grows into a card in the middle of the screen */
+body[data-platform="meta-webapp"][data-state="burning"] .paper-wrap,
+body[data-platform="meta-webapp"][data-state="afterglow"] .paper-wrap {
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  top: 118px;
+  height: 340px;
+  width: auto;
+}
+body[data-platform="meta-webapp"] .burn { filter: none; transition: opacity 250ms ease; }
+body[data-platform="meta-webapp"][data-state="idle"] .paper { animation: none; }
+
+/* --- primary action ------------------------------------------------------- */
+
+body[data-platform="meta-webapp"] .actions {
+  display: block;
+  min-height: 0;
+  margin-top: 10px;
 }
 body[data-platform="meta-webapp"] .burn-btn {
-  font-size: 16px;
-  min-height: 56px;
-  padding: 0 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  height: 84px;
+  padding: 0 24px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  border-radius: 22px;
+  border: 3px solid transparent;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  transition: background 200ms ease, color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+  /* empty state: muted, like "hold this thought" in the reference */
+  color: #6a5544;
+  background: linear-gradient(180deg, #2a1f18, #221a15);
+  box-shadow: none;
 }
-
-/* focus is the only pointer on the glasses: make it unmistakable */
-body[data-platform="meta-webapp"] .focusable:focus {
-  outline: none;
+body[data-platform="meta-webapp"] .burn-btn__ready { display: none; }
+body[data-platform="meta-webapp"] .burn-btn.is-available .burn-btn__idle { display: none; }
+body[data-platform="meta-webapp"] .burn-btn.is-available .burn-btn__ready { display: inline; }
+body[data-platform="meta-webapp"] .burn-btn.is-available {
+  color: #1a0d05;
+  background: linear-gradient(180deg, #ffa25c, var(--orange) 55%, var(--orange-deep));
+  border-color: transparent;
 }
-body[data-platform="meta-webapp"] .chip:focus,
 body[data-platform="meta-webapp"] .burn-btn:focus {
-  border-color: var(--ember);
-  color: #fff;
-  box-shadow: 0 0 0 2px var(--ember), 0 0 24px -2px rgba(255, 122, 26, 0.7);
+  outline: none;
+  border-color: var(--cream);
+  box-shadow: 0 0 0 4px #000, 0 0 0 7px var(--cream);
 }
-body[data-platform="meta-webapp"] .paper:focus-within {
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
-    0 0 0 3px var(--ember),
-    0 0 36px -2px rgba(255, 122, 26, 0.65);
+body[data-platform="meta-webapp"] .burn-btn:active { transform: none; }
+
+/* --- divider + chips ------------------------------------------------------ */
+
+body[data-platform="meta-webapp"] .divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 12px 0 10px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-3);
+}
+body[data-platform="meta-webapp"] .divider::before,
+body[data-platform="meta-webapp"] .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+body[data-platform="meta-webapp"] .chips {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+body[data-platform="meta-webapp"] .chip {
+  height: 88px;
+  padding: 0 8px;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text);
+  background: var(--surface);
+  border: 3px solid var(--line);
+  border-radius: 18px;
+  transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+}
+body[data-platform="meta-webapp"] .chip:focus {
+  outline: none;
+  border-color: var(--orange);
+  background: var(--surface-2);
+  box-shadow: 0 0 0 4px #000, 0 0 0 7px var(--cream);
 }
 
-/* the paper itself is not a target here; the textarea is */
-body[data-platform="meta-webapp"] .paper { cursor: default; }
-body[data-platform="meta-webapp"] .thought { cursor: default; }
+body[data-platform="meta-webapp"] .footnote {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-3);
+}
 
-/* the burn canvas has no drop shadow on device: black is transparent anyway */
-body[data-platform="meta-webapp"] .burn { filter: none; }
+/* --- afterglow line ------------------------------------------------------- */
+
+body[data-platform="meta-webapp"] .stage > .afterglow {
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  z-index: 3;
+  font-family: var(--serif);
+  font-size: 44px;
+  color: #fff6ea;
+}

@@ -133,6 +133,15 @@ build:
   starter kit documents the on-glasses handwriting/voice composer as
   "focus the field, then pinch" — programmatic focus will not open it.
 
+The on-device screen follows Meta's display guidelines: a pure-black page
+(transparent on the additive display), dark warm surfaces for the field,
+button and chips, white text at native size, 84–100 px focus targets with a
+cream-and-orange focus ring, and an 8 px safe margin. The guided flow needs
+almost no navigation: the field is focused on load, a pinch opens the
+composer, the committed thought moves focus to Burn This, a second pinch
+burns, and after the afterglow focus returns to the field. The chips are one
+swipe away.
+
 To try it on hardware: host the repo over HTTPS, enable Developer Mode in the
 Meta AI app (Settings → App Info → tap the version five times), then App
 Settings → App Connections → Web Apps → Add a Web App → your
