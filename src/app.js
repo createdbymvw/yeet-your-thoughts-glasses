@@ -45,7 +45,7 @@ export function createApp(doc = document, { platform = 'web' } = {}) {
   // Adapter selection. Meta documents no way to detect the glasses runtime, so
   // the device build (glasses.html) opts in explicitly via `platform`.
   const adapter = platform === 'meta-webapp'
-    ? new MetaInteractionAdapter({ textInput: els.textarea })
+    ? new MetaInteractionAdapter({ root: els.root, textInput: els.textarea })
     : new WebInteractionAdapter({ root: els.root, textInput: els.textarea });
 
   // Microphone access is not available to web apps on the glasses; the native

@@ -63,24 +63,32 @@ Changed for the device: `glasses.html` (required meta tags, 600 × 600 body,
 
 ## 3. Text input / dictation
 
-- **Docs site (Build page):** "Text Input" is listed under *unsupported*
-  features, alongside camera and microphone.
-- **Meta's starter repo** (`skills/add-text-input/SKILL.md` in
-  facebookincubator/meta-wearables-webapp) documents an **on-glasses composer**
-  (handwriting or voice, the wearer chooses): focus a `<textarea>` /
-  eligible `<input>` / `contenteditable`, then **pinch** → composer opens →
-  committed text is written to the field and the standard **`input` and
-  `change`** events fire with the whole value. No `keydown` events are
-  delivered. "A programmatic `.focus()` will **not** surface it — the wearer
-  must tap a focused field." "On some builds the composer may be unavailable."
+**Verified on hardware (12 Sep 2026)** with `composer-test.html`: pinching a
+focused `<textarea>` opens Meta's on-glasses composer and voice input works.
+The docs site still lists "Text Input" as unsupported; Meta's starter repo
+(`skills/add-text-input/SKILL.md` in facebookincubator/meta-wearables-webapp)
+documents the composer, and the hardware agrees with the repo.
 
-The two sources disagree, so this project treats the composer as
-**present-but-unverified**: the glasses build makes the `<textarea>` itself the
-focusable paper target (so a pinch on it goes straight to the runtime) and
-listens to `input`/`change`. If the composer is absent on a given build, the
-four preset chips still make the ritual usable end to end. **Must be verified
-on hardware.** The browser's Web Speech mic is not used on the glasses
-(microphone access is unsupported for web apps).
+How it works, and what the app does:
+
+- Eligible fields: `<textarea>`, text-type `<input>`, `contenteditable`, all
+  carrying the `focusable` class and a `placeholder`.
+- The trigger is **focus, then pinch**. The pinch arrives as an `Enter`
+  keydown; the page must answer it exactly as Meta's sample does, with
+  `document.activeElement.click()`. That click on the focused field is what
+  opens the composer. Calling `preventDefault()` without the click, or
+  blurring the field, cancels it. (This was the original bug in this app.)
+- The wearer picks voice or handwriting inside the composer; the page cannot
+  choose. Handwriting depends on the Neural Band handwriting feature being
+  enabled on the account (early access, US/English at the time of writing);
+  only voice was offered on the test device.
+- Committed text comes back through the standard `input` and `change`
+  events with the whole value. No keydown is delivered for it.
+  `InputController` reads `input` into `ThoughtState`; `MetaInteractionAdapter`
+  turns `change` into `commit`, which moves focus to Burn This.
+- Microphone access is not available to web apps, so the browser's Web Speech
+  mic button is absent from the glasses build; the composer is the only
+  dictation path.
 
 ## 4. Selection / pinch / gesture input
 
@@ -102,8 +110,9 @@ pointer events — Meta repo `add-gestures` skill) but is not needed here.
 Custom gestures, wrist rotation and raw EMG are **not** exposed.
 
 `MetaInteractionAdapter` implements exactly this table and nothing more:
-arrows → `navigate`, Enter on a focused target → `select`, Escape → `back`,
-`change` on the field → `commit`.
+arrows → `navigate`, Enter → `document.activeElement.click()` (a click on a
+button becomes `select`; a click on the text field is left to the runtime, which
+opens the composer), Escape → `back`, `change` on the field → `commit`.
 
 ## 5. Viewport / rendering limitations
 
@@ -162,8 +171,9 @@ should still be published with the URL.
 
 ## Open verification items (need hardware)
 
-- [ ] Composer opens on pinch when the textarea is focused; `input`/`change` fire with the whole value.
-- [ ] Programmatic focus on the textarea at idle does not confuse the runtime.
+- [x] Composer opens on pinch when the textarea is focused; voice input commits into the field (12 Sep 2026, composer-test.html).
+- [ ] Same flow inside glasses.html, where the field is focused programmatically at idle rather than by a swipe.
+- [ ] Handwriting appears in the composer once the account's handwriting feature is enabled.
 - [ ] WebGL context creation and shader performance at 600 × 600 (target 60 fps; fallback is software).
 - [ ] The near-black ember glow reads correctly on the additive display.
 - [ ] 48–56 px chip/button heights are comfortable; raise to 88 px if not.

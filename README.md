@@ -153,10 +153,12 @@ sources in [docs/meta-glasses.md](docs/meta-glasses.md).
   may drop frames; the particle budget already halves in glasses mode.
 - The glasses preview approximates size and pixel grid only. It does not
   emulate the display's brightness, colour range, field of view or optics.
-- The glasses build is untested on hardware. Text entry depends on Meta's
-  on-glasses composer, which the docs site lists as unsupported while Meta's
-  starter kit documents it; the preset chips are the fallback. See
-  docs/meta-glasses.md for the open verification list.
+- On the glasses, text entry uses Meta's on-glasses composer: pinch the
+  focused paper, then speak (or write, when handwriting is enabled on the
+  account). The composer was verified on hardware with `composer-test.html`;
+  the full app follows the same pattern. Meta's docs site still lists text
+  input as unsupported, so treat it as preview behaviour. The preset chips
+  remain the fallback.
 - Web Apps on the glasses are a Developer Preview: share-link testers only,
   no public publishing yet.
 

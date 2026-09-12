@@ -3,93 +3,91 @@ import { InteractionAdapter, Intent } from './InteractionAdapter.js';
 /**
  * MetaInteractionAdapter — input for Meta Ray-Ban Display "Web Apps".
  *
- * Everything here is based on Meta's official Web Apps documentation
- * (see docs/meta-glasses.md for sources). The runtime translates Neural Band
- * and temple-captouch gestures into ordinary DOM keyboard events:
+ * Verified on hardware (composer-test.html, Sept 2026) and matching Meta's
+ * official Web Apps input sample. The glasses runtime turns Neural Band and
+ * temple-captouch gestures into ordinary DOM keyboard events:
  *
  *   swipe up/down/left/right → keydown ArrowUp / ArrowDown / ArrowLeft / ArrowRight
  *   index-finger pinch       → keydown Enter (on document.activeElement)
  *   back                     → keydown Escape
  *
- * There is no cursor and no pointer events by default, so this adapter does
- * not listen for clicks. Text entry: per Meta's starter repo, pinching a
- * focused <textarea> opens the on-glasses composer (handwriting or voice);
- * the committed text arrives through standard `input` / `change` events, and
- * no keydown reaches the page. We therefore:
- *   - never intercept keys while the composer is up (we can't see them anyway)
- *   - treat `change` on the text field as `commit`
- *   - still map Enter inside the field to `commit`, which only ever fires on a
- *     desktop simulator where there is no composer
+ * The one rule that makes text entry work: on Enter, do exactly what Meta's
+ * sample does — `document.activeElement.click()` — and nothing else. A click
+ * on a focused <textarea>/<input> is what opens the on-glasses composer
+ * (voice / handwriting). Calling preventDefault() without the click, or
+ * blurring the field, cancels it. The committed text comes back through the
+ * standard `input` and `change` events; no keydown is ever delivered for it.
  *
- * Nothing in this file calls a Meta-specific API, because none is exposed to
- * web apps. If Meta adds one, this is the only file that should change.
+ * No Meta-specific API is used because none is exposed to web apps.
  */
 export class MetaInteractionAdapter extends InteractionAdapter {
+  #root;
   #textInput;
   #targetSelector;
 
-  constructor({ textInput, targetSelector = '[data-target]' }) {
+  constructor({ root, textInput, targetSelector = '[data-target]' }) {
     super();
+    this.#root = root;
     this.#textInput = textInput;
     this.#targetSelector = targetSelector;
   }
 
   get name() { return 'meta-webapp'; }
 
-  /**
-   * Meta documents no user-agent string, media query or JS API for detecting
-   * the glasses runtime, so availability is decided by the entry page
-   * (glasses.html) rather than by sniffing.
-   */
+  /** Meta documents no runtime detection; glasses.html opts in explicitly. */
   static isAvailable() { return false; }
 
   attach() {
     document.addEventListener('keydown', this.#onKeyDown);
+    this.#root.addEventListener('click', this.#onClick);
     this.#textInput?.addEventListener('change', this.#onChange);
   }
 
   detach() {
     document.removeEventListener('keydown', this.#onKeyDown);
+    this.#root.removeEventListener('click', this.#onClick);
     this.#textInput?.removeEventListener('change', this.#onChange);
   }
 
+  /**
+   * Activation. Reached by the synthetic click from #onKeyDown (a pinch) or
+   * by a real click when the same page is opened on a desktop. A click on the
+   * text field is left to the runtime: that is the composer trigger.
+   */
+  #onClick = (event) => {
+    const el = event.target.closest?.(this.#targetSelector);
+    if (!el || el.disabled || el.hidden) return;
+    if (el === this.#textInput) return;
+    this.emit(Intent.SELECT, { target: el.dataset.target, element: el, source: 'pinch' });
+  };
+
+  /** The composer committed text into the field. */
   #onChange = () => {
-    // the on-glasses composer committed text
     this.emit(Intent.COMMIT, { source: 'composer' });
   };
 
   #onKeyDown = (event) => {
-    if (event.defaultPrevented) return;
-    const inText = event.target === this.#textInput;
-
     switch (event.key) {
-      case 'Escape':
-        event.preventDefault();
-        this.emit(Intent.BACK, {});
-        return;
       case 'ArrowUp':
       case 'ArrowLeft':
-        event.preventDefault();
         this.emit(Intent.NAVIGATE, { direction: 'prev' });
-        return;
+        break;
       case 'ArrowDown':
       case 'ArrowRight':
-        event.preventDefault();
         this.emit(Intent.NAVIGATE, { direction: 'next' });
-        return;
+        break;
       case 'Enter': {
-        if (inText) {
-          // desktop simulator only — on device the composer swallows this
-          if (!event.shiftKey) { event.preventDefault(); this.emit(Intent.COMMIT, { source: 'keyboard' }); }
-          return;
-        }
-        const el = event.target.closest?.(this.#targetSelector);
-        if (!el || el.disabled) return;
-        event.preventDefault();
-        this.emit(Intent.SELECT, { target: el.dataset.target, element: el, source: 'pinch' });
-        return;
+        // Meta's sample, verbatim in spirit: click whatever has focus.
+        const active = document.activeElement;
+        if (active?.classList.contains('focusable')) active.click();
+        break;
       }
+      case 'Escape':
+        this.emit(Intent.BACK, {});
+        break;
       default:
+        return; // don't preventDefault on unhandled keys
     }
+    event.preventDefault();
   };
 }
