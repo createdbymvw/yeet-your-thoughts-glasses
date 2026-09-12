@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="composer test — one text field, Meta's canonical input pattern">
+  <meta name="mrbd-web-app-capable" content="yes">
+  <meta name="viewport" content="width=600, height=600, initial-scale=1.0, user-scalable=no">
+  <meta name="color-scheme" content="dark">
+  <title>composer test</title>
+  <link rel="icon" type="image/png" sizes="128x128" href="./assets/icon-128.png">
+  <style>
+    /* Meta Web Apps: fixed 600×600, pure black = transparent on the additive display */
+    html, body { margin: 0; width: 600px; height: 600px; overflow: hidden; background: #000; }
+    body {
+      color: #e8e8e8;
+      font: 18px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 14px;
+      padding: 28px 32px;
+      box-sizing: border-box;
+    }
+    h1 { margin: 0; font-size: 24px; font-weight: 500; }
+    .steps { margin: 0; font-size: 16px; color: #b8b8b8; }
+    .steps b { color: #fff; }
+
+    /* Meta's canonical focusable styling (build guide), verbatim values */
+    .focusable {
+      transition: all 150ms ease;
+      border: 2px solid transparent;
+      min-height: 88px; /* glasses minimum tap target */
+    }
+    .focusable:focus {
+      outline: none;
+      border-color: #00d4ff;
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+    }
+
+    /* the one field: a plain native textarea, no custom input logic */
+    textarea {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 18px 20px;
+      font: 24px/1.3 Georgia, serif;
+      color: #111;
+      background: #f1e9da;
+      border-radius: 6px;
+      resize: none;
+    }
+    textarea::placeholder { color: #8a8073; }
+
+    .log {
+      margin: 0;
+      font: 14px/1.45 ui-monospace, Menlo, monospace;
+      color: #9ad0ff;
+      overflow: hidden;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .value { margin: 0; font-size: 18px; color: #ffcc66; min-height: 1.4em; }
+  </style>
+</head>
+<body>
+  <h1>composer test</h1>
+  <p class="steps"><b>1.</b> swipe any direction to focus the field &nbsp; <b>2.</b> pinch → composer should open</p>
+
+  <label for="note" style="display:none">Note</label>
+  <textarea id="note" class="focusable" rows="2" placeholder="Tap to write or speak"></textarea>
+
+  <div>
+    <p class="value" id="value">value: (empty)</p>
+    <pre class="log" id="log"></pre>
+  </div>
+
+  <script>
+    // ------------------------------------------------------------------
+    // Passive observers only: no preventDefault, no focus/blur changes.
+    // They exist so the glasses can show us which events actually arrive.
+    // ------------------------------------------------------------------
+    var note = document.getElementById('note');
+    var logEl = document.getElementById('log');
+    var valueEl = document.getElementById('value');
+    var lines = [];
+    function log(s) {
+      lines.unshift(s);
+      lines = lines.slice(0, 9);
+      logEl.textContent = lines.join('\n');
+    }
+    ['focus', 'blur', 'click', 'input', 'change'].forEach(function (t) {
+      note.addEventListener(t, function () {
+        if (t === 'input' || t === 'change') valueEl.textContent = 'value: ' + (note.value || '(empty)');
+        log(t + '  (active=' + (document.activeElement === note ? 'field' : document.activeElement.tagName.toLowerCase()) + ')');
+      });
+    });
+    document.addEventListener('keydown', function (e) {
+      log('keydown ' + e.key + (e.defaultPrevented ? ' [prevented]' : ''));
+    }, true); // capture phase, purely observational
+
+    // ------------------------------------------------------------------
+    // Meta's official D-pad listener, copied from the Web Apps Build guide.
+    // Add ?bare=1 to the URL to remove it and rely on the runtime alone.
+    // ------------------------------------------------------------------
+    if (!/[?&]bare=1/.test(location.search)) {
+      var DPAD = { UP: 'ArrowUp', DOWN: 'ArrowDown', LEFT: 'ArrowLeft', RIGHT: 'ArrowRight', SELECT: 'Enter', BACK: 'Escape' };
+
+      function moveFocus(direction) {
+        var focusables = Array.from(document.querySelectorAll('.focusable:not([disabled]):not(.hidden)'));
+        if (!focusables.length) return;
+        var idx = focusables.indexOf(document.activeElement);
+        if (idx === -1) { focusables[0].focus(); return; }
+        var next = (direction === 'up' || direction === 'left')
+          ? (idx > 0 ? idx - 1 : focusables.length - 1)
+          : (idx < focusables.length - 1 ? idx + 1 : 0);
+        focusables[next].focus();
+        focusables[next].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+
+      document.addEventListener('keydown', function (e) {
+        switch (e.key) {
+          case DPAD.UP:    moveFocus('up');    break;
+          case DPAD.DOWN:  moveFocus('down');  break;
+          case DPAD.LEFT:  moveFocus('left');  break;
+          case DPAD.RIGHT: moveFocus('right'); break;
+          case DPAD.SELECT:
+            if (document.activeElement.classList.contains('focusable')) {
+              document.activeElement.click();
+            }
+            break;
+          case DPAD.BACK:  history.back();     break;
+          default: return; // don't preventDefault on unhandled keys
+        }
+        e.preventDefault();
+      });
+      log('mode: meta listener (add ?bare=1 to disable)');
+    } else {
+      log('mode: bare (no keydown handling)');
+    }
+  </script>
+</body>
+</html>
